@@ -7,6 +7,7 @@ defmodule SegmentSpec.MixProject do
   def project do
     [
       app: :segment_spec,
+      description: "A simple data model for events in the Segment spec",
       version: @version,
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
