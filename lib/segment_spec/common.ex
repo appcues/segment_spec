@@ -6,8 +6,8 @@ defmodule SegmentSpec.Common do
   def fields do
     [
       anonymous_id: nil,
-      context: %{},
-      integrations: %{},
+      context: %SegmentSpec.Common.Context{},
+      integrations: nil,
       message_id: nil,
       received_at: nil,
       sent_at: nil,

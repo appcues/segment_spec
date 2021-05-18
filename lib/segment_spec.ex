@@ -4,8 +4,8 @@ defmodule SegmentSpec do
   in [the Segment.com spec](https://segment.com/docs/connections/spec/).
 
   The `parse/1` and `parse!/1` functions convert a Segment event in
-  its JSON-decoded format into an appropriate struct  This struct is
-  of type `t:event()`, and contains all fields particular to the
+  its JSON-decoded format into an appropriate struct. This struct is
+  of type `t:event_struct()`, and contains all fields particular to the
   event type, as well as all fields common to all Segment events.
   The common field `context` is parsed into a `SegmentSpec.Common.Context`
   struct during this process.
@@ -20,6 +20,9 @@ defmodule SegmentSpec do
 
   In other words, we normalize the fields that _Segment_ puts in the
   events, but we do not touch the fields that the _Segment user_ provides.
+
+  The `normalize/2` and `normalize!/2` functions return a normalized version
+  of the given Segment event, with or without null fields.
 
   iex> track = %{
   ...>   "type" => "track",
@@ -36,9 +39,19 @@ defmodule SegmentSpec do
     properties: %{"thingColor" => "red"},
     context: %SegmentSpec.Common.Context{group_id: "abc"}
   }
+  iex> SegmentSpec.normalize!(track)
+  %{
+    "type" => "track",
+    "user_id" => "xyz",
+    "event" => "Clicked thing",
+    "properties" => %{"thingColor" => "red"},
+    "context" => %{"group_id" => "abc"}
+  }
   """
 
-  @type event ::
+  @type event_map :: %{String.t() => any}
+
+  @type event_struct ::
           SegmentSpec.Identify.t()
           | SegmentSpec.Track.t()
           | SegmentSpec.Page.t()
@@ -46,8 +59,8 @@ defmodule SegmentSpec do
           | SegmentSpec.Group.t()
           | SegmentSpec.Alias.t()
 
-  @doc "Parses a Segment event into an appropriate `t:event()` struct."
-  @spec parse(map) :: {:ok, event} | {:error, String.t()}
+  @doc "Parses a Segment event map into the appropriate `t:event_struct()` struct."
+  @spec parse(event_map) :: {:ok, event_struct} | {:error, String.t()}
   def parse(%{} = event) do
     try do
       {:ok, parse!(event)}
@@ -56,8 +69,8 @@ defmodule SegmentSpec do
     end
   end
 
-  @doc "Parses a Segment event into an appropriate `t:event()` struct."
-  @spec parse!(map) :: event
+  @doc "Parses a Segment event map into the appropriate `t:event()` struct."
+  @spec parse!(event_map) :: event_struct
   def parse!(%{} = event) do
     type = event["type"] || event[:type]
 
@@ -92,7 +105,8 @@ defmodule SegmentSpec do
   internal fields have been coerced into snake_case. Pass the `include_nil: true`
   option to include empty fields.
   """
-  @spec normalize(map, Keyword.t()) :: {:ok, map} | {:error, String.t()}
+  @spec normalize(event_struct | event_map, Keyword.t()) ::
+          {:ok, event_map} | {:error, String.t()}
   def normalize(event, opts \\ []) do
     try do
       {:ok, normalize!(event, opts)}
@@ -106,19 +120,32 @@ defmodule SegmentSpec do
   internal fields have been coerced into snake_case. Pass the `include_nil: true`
   option to include empty fields.
   """
-  @spec normalize!(map, Keyword.t()) :: map
+  @spec normalize!(event_struct | event_map, Keyword.t()) :: event_map
   def normalize!(event, opts \\ []) do
+    parsed =
+      case event do
+        %{__struct__: _} -> event
+        %{} -> parse!(event)
+      end
+
     include_nil? = !!opts[:include_nil]
-    parsed = parse!(event)
+
     context_map = parsed.context |> normalize_struct!(include_nil?)
-    parsed |> normalize_struct!(include_nil?) |> Map.put(:context, context_map)
+
+    parsed |> normalize_struct!(include_nil?) |> Map.put("context", context_map)
   end
 
   defp normalize_struct!(struct, true) do
-    struct |> Map.from_struct()
+    struct
+    |> Map.from_struct()
+    |> Enum.map(fn {k, v} -> {to_string(k), v} end)
+    |> Enum.into(%{})
   end
 
   defp normalize_struct!(struct, false) do
-    struct |> Map.from_struct() |> Enum.filter(fn {_, v} -> !is_nil(v) end) |> Enum.into(%{})
+    struct
+    |> normalize_struct!(true)
+    |> Enum.filter(fn {_, v} -> !is_nil(v) end)
+    |> Enum.into(%{})
   end
 end
