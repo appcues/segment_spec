@@ -9,7 +9,7 @@ its JSON-decoded format into an appropriate struct.
 The `normalize/2` and `normalize!/2` functions return a normalized version
 of the given Segment event, with or without null fields.
 
-See [lib/segment_spec.ex] for docs.
+See [lib/segment_spec.ex](lib/segment_spec.ex) for docs.
 
 ## Installation
 
