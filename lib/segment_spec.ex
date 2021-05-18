@@ -5,7 +5,7 @@ defmodule SegmentSpec do
 
   The `parse/1` and `parse!/1` functions convert a Segment event in
   its JSON-decoded format into an appropriate struct. This struct is
-  of type `t:event_struct()`, and contains all fields particular to the
+  of type `t:event_struct/0`, and contains all fields particular to the
   event type, as well as all fields common to all Segment events.
   The common field `context` is parsed into a `SegmentSpec.Common.Context`
   struct during this process.
@@ -18,35 +18,36 @@ defmodule SegmentSpec do
   or [`traits`](https://segment.com/docs/connections/spec/identify/#traits),
   is represented as a string, exactly as it was received.
 
-  In other words, we normalize the fields that _Segment_ puts in the
+  In other words, we normalize the internal fields that _Segment_ puts in the
   events, but we do not touch the fields that the _Segment user_ provides.
 
   The `normalize/2` and `normalize!/2` functions return a normalized version
-  of the given Segment event, with or without null fields.
+  of the given Segment event, with or without null fields. Internal Segment
+  fields are coerced into snake_case as described above.
 
-  iex> track = %{
-  ...>   "type" => "track",
-  ...>   "userId" => "xyz",
-  ...>   "event" => "Clicked thing",
-  ...>   "properties" => %{"thingColor" => "red"},
-  ...>   "context" => %{"groupId" => "abc"}
-  ...> }
-  iex> SegmentSpec.parse!(track)
-  %SegmentSpec.Track{
-    type: "track",
-    user_id: "xyz",
-    event: "Clicked thing",
-    properties: %{"thingColor" => "red"},
-    context: %SegmentSpec.Common.Context{group_id: "abc"}
-  }
-  iex> SegmentSpec.normalize!(track)
-  %{
-    "type" => "track",
-    "user_id" => "xyz",
-    "event" => "Clicked thing",
-    "properties" => %{"thingColor" => "red"},
-    "context" => %{"group_id" => "abc"}
-  }
+      iex> track = %{
+      ...>   "type" => "track",
+      ...>   "userId" => "xyz",
+      ...>   "event" => "Clicked thing",
+      ...>   "properties" => %{"thingColor" => "red"},
+      ...>   "context" => %{"groupId" => "abc"}
+      ...> }
+      iex> SegmentSpec.parse!(track)
+      %SegmentSpec.Track{
+        type: "track",
+        user_id: "xyz",
+        event: "Clicked thing",
+        properties: %{"thingColor" => "red"},
+        context: %SegmentSpec.Common.Context{group_id: "abc"}
+      }
+      iex> SegmentSpec.normalize!(track)
+      %{
+        "type" => "track",
+        "user_id" => "xyz",
+        "event" => "Clicked thing",
+        "properties" => %{"thingColor" => "red"},
+        "context" => %{"group_id" => "abc"}
+      }
   """
 
   @type event_map :: %{String.t() => any}
@@ -59,7 +60,7 @@ defmodule SegmentSpec do
           | SegmentSpec.Group.t()
           | SegmentSpec.Alias.t()
 
-  @doc "Parses a Segment event map into the appropriate `t:event_struct()` struct."
+  @doc "Parses a Segment event map into the appropriate `t:event_struct/0` struct."
   @spec parse(event_map) :: {:ok, event_struct} | {:error, String.t()}
   def parse(%{} = event) do
     try do
@@ -69,7 +70,7 @@ defmodule SegmentSpec do
     end
   end
 
-  @doc "Parses a Segment event map into the appropriate `t:event()` struct."
+  @doc "Parses a Segment event map into the appropriate `t:event_struct/0` struct."
   @spec parse!(event_map) :: event_struct
   def parse!(%{} = event) do
     type = event["type"] || event[:type]
