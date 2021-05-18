@@ -3,15 +3,17 @@ defmodule SegmentSpec.Page do
 
   @type t :: %__MODULE__{}
 
+  @derive Jason.Encoder
+
   @fields [name: nil, properties: %{}]
 
   defstruct SegmentSpec.Common.fields() ++ @fields
 
   use ExConstructor
 
-  def parse!(msg) do
-    new(msg)
+  @doc "Parses a Segment `page` event into a SegmentSpec.Page struct."
+  @spec parse!(map) :: t
+  def parse!(event) do
+    new(event)
   end
-
-  @derive Jason.Encoder
 end

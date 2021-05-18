@@ -1,17 +1,19 @@
 defmodule SegmentSpec.Identify do
   @moduledoc "Represents a Segment `identify` event."
 
-  @fields [traits: %{}]
-
   @type t :: %__MODULE__{}
+
+  @derive Jason.Encoder
+
+  @fields [traits: %{}]
 
   defstruct SegmentSpec.Common.fields() ++ @fields
 
   use ExConstructor
 
-  def parse!(msg) do
-    new(msg)
+  @doc "Parses a Segment `identify` event into a SegmentSpec.Identify struct."
+  @spec parse!(map) :: t
+  def parse!(event) do
+    new(event)
   end
-
-  @derive Jason.Encoder
 end

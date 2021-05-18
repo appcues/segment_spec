@@ -3,15 +3,17 @@ defmodule SegmentSpec.Track do
 
   @type t :: %__MODULE__{}
 
+  @derive Jason.Encoder
+
   @fields [event: nil, properties: %{}]
 
   defstruct SegmentSpec.Common.fields() ++ @fields
 
   use ExConstructor
 
-  def parse!(msg) do
-    new(msg)
+  @doc "Parses a Segment `track` event into a SegmentSpec.Track struct."
+  @spec parse!(map) :: t
+  def parse!(event) do
+    new(event)
   end
-
-  @derive Jason.Encoder
 end

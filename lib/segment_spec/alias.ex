@@ -3,15 +3,17 @@ defmodule SegmentSpec.Alias do
 
   @type t :: %__MODULE__{}
 
+  @derive Jason.Encoder
+
   @fields [previous_id: nil]
 
   defstruct SegmentSpec.Common.fields() ++ @fields
 
   use ExConstructor
 
-  def parse!(msg) do
-    new(msg)
+  @doc "Parses a Segment `alias` event into a SegmentSpec.Alias struct."
+  @spec parse!(map) :: t
+  def parse!(event) do
+    new(event)
   end
-
-  @derive Jason.Encoder
 end

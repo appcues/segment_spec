@@ -2,6 +2,7 @@ defmodule SegmentSpec.Common do
   @moduledoc false
 
   @doc "Fields common to every Segment event."
+  @spec fields :: Keyword.t()
   def fields do
     [
       anonymous_id: nil,
