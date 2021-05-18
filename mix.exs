@@ -1,19 +1,36 @@
 defmodule SegmentSpec.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+  @repo_url "https://github.com/appcues/segment_spec"
+
   def project do
     [
       app: :segment_spec,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
-      deps: deps()
+      package: package(),
+      deps: deps(),
+      docs: [
+        main: "SegmentSpec",
+        source_ref: @version,
+        source_url: @repo_url
+      ]
     ]
   end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_env), do: ["lib"]
+
+  defp package do
+    [
+      licenses: ["MIT"],
+      maintainers: ["pete gamache <pete@appcues.com>"],
+      links: %{github: @repo_url}
+    ]
+  end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
